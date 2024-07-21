@@ -23,6 +23,17 @@ namespace FoxSort {
 		void Shutdown();
 		void Draw(std::vector<int>& v, SDL_Renderer* renderer, unsigned int red, unsigned int blue);
 
+
+		void InitSort();
+		void DrawArray(const std::vector<int>& array, SDL_Renderer* renderer, int red_index, int blue_index);
+
+ 
+
+		// Sorting related variables
+		std::vector<int> values;
+		int current_index = 1;
+		std::vector<float> search_times;
+
 	private:
 		static Application* instance;
 		

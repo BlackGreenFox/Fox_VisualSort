@@ -1,10 +1,12 @@
-#pragma once
+﻿#pragma once
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_sdlrenderer2.h>
+#include "imgui_impl_opengl3.h"
 #include <imgui.h>
 
 #include "Application.h"
  
+#define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR)))) 
 
 namespace FoxSort {
     Application* Application::instance = nullptr;
@@ -64,6 +66,7 @@ namespace FoxSort {
         Style::SetImGuiStyle();
  
         m_running = true;
+ 
 
         while (m_running) {
             SDL_Event event{};
@@ -74,42 +77,103 @@ namespace FoxSort {
                     Shutdown();
                 }
             }
+
+            ImGui_ImplSDLRenderer2_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+
+            ImGui::NewFrame();
  
- 
+
             UpdateGUI();
+
+            ImGui::Render();
+
+            SDL_SetRenderDrawColor(m_window->get_native_renderer(), 233, 100, 100, 255);
+            SDL_RenderClear(m_window->get_native_renderer());
+
+
             Update();
+
+
+             ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_window->get_native_renderer());
+            SDL_RenderPresent(
+                m_window->get_native_renderer()
+            );
         }
  
         return m_exit_status;
     }
 
     void Application::Update() {
-      /*  SDL_SetRenderDrawColor(
-            m_window->get_native_renderer(),
-            100, 100, 100, 255
+
+        int window_width{ 0 };
+        int window_height{ 0 };
+        SDL_GetWindowSize(
+            m_window->get_native_window(),
+            &window_width, &window_height
         );
 
-        SDL_RenderClear(m_window->get_native_renderer());*/
-        // Render data through the SDL renderer
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_window->get_native_renderer());
-        SDL_RenderPresent(m_window->get_native_renderer());
+        int square1_width = window_width * 0.3;
+        int square2_width = window_width * 0.7;
+        int square_height = window_height;
+
+ 
+
+        // Малювання першого квадрату (червоний)
+        SDL_Rect square1 = { 0, 0, square1_width, square_height };
+        SDL_SetRenderDrawColor(m_window->get_native_renderer(), 255, 0, 0, 255);
+        SDL_RenderFillRect(m_window->get_native_renderer(), &square1);
+
+        //// Малювання другого квадрату (синій)
+        //SDL_Rect square2 = { square1_width, 0, square2_width, square_height };
+        //SDL_SetRenderDrawColor(m_window->get_native_renderer(), 0, 0, 255, 255);
+        //SDL_RenderFillRect(m_window->get_native_renderer(), &square2);
     }
 
     void Application::UpdateGUI() {
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-        ImGui::DockSpaceOverViewport();
-
-
         // Render "some panel".
         if (m_show_some_panel) {
-            ImGui::Begin("Some panel", &m_show_some_panel);
+            int window_width{ 0 };
+            int window_height{ 0 };
+            SDL_GetWindowSize(
+                m_window->get_native_window(),
+                &window_width, &window_height
+            );
+
+            int panel_width = static_cast<int>(window_width * 0.3);
+            int panel_height = window_height;
+
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            ImGui::SetNextWindowSize(ImVec2(panel_width, panel_height));
+            ImGui::Begin("Some panel", &m_show_some_panel, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
             ImGui::Text("Hello World");
+            static float values[90] = {};
+            static int values_offset = 0;
+            static double refresh_time = 0.0;
+            if ( refresh_time == 0.0)
+                refresh_time = ImGui::GetTime();
+            while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
+            {
+                static float phase = 0.0f;
+                values[values_offset] = cosf(phase);
+                values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+                phase += 0.10f * values_offset;
+                refresh_time += 1.0f / 60.0f;
+            }
+            {
+                float average = 0.0f;
+                for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+                    average += values[n];
+                average /= (float)IM_ARRAYSIZE(values);
+                char overlay[32];
+                sprintf(overlay, "avg %f", average);
+                ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+            }
+
+
             ImGui::End();
         }
-
-        ImGui::Render();
     }
 
     void Application::Draw(std::vector<int>& v, SDL_Renderer* renderer, unsigned int red, unsigned int blue)
