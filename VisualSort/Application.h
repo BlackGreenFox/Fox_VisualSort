@@ -8,6 +8,8 @@
 
 #include "Core/Window.h"
 #include "Core/Style.h"
+ 
+#include "Core/Sort/BubbleSort.h"
 
 namespace FoxSort {
 
@@ -28,11 +30,14 @@ namespace FoxSort {
 		void DrawArray(const std::vector<int>& array, SDL_Renderer* renderer, int red_index, int blue_index);
 
  
-
+		SDL_Texture* LoadTexture(const std::string& path, SDL_Renderer* renderer);
 		// Sorting related variables
-		std::vector<int> values;
+ 
 		int current_index = 1;
 		std::vector<float> search_times;
+
+		void TogglePauseSorting();
+		void SetSortingDelay(int delay);  
 
 	private:
 		static Application* instance;
@@ -43,6 +48,20 @@ namespace FoxSort {
 		std::unique_ptr<Window> m_window{nullptr};
 
 		bool m_show_some_panel{ true };
+
+
+		SDL_Texture* left_image = nullptr;
+ 
+
+		std::vector<int> values;
+		std::unique_ptr<SortBase> sorter;
+		bool is_sorting_paused;
+		int delay;  // Add this line
+
+		// Add buffer for plotting
+		static const int plot_buffer_size = 100;
+		std::vector<float> plot_values;
+		int plot_values_offset;
 	};
 
 } 

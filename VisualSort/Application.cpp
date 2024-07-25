@@ -4,9 +4,13 @@
 #include "imgui_impl_opengl3.h"
 #include <imgui.h>
 
+#include <SDL.h>
+#include <SDL_image.h>
+
 #include "Application.h"
  
 #define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR)))) 
+ 
 
 namespace FoxSort {
     Application* Application::instance = nullptr;
@@ -26,6 +30,10 @@ namespace FoxSort {
             m_exit_status = 1;
         }
 
+        if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
+            m_exit_status = 1;
+        }
+
         // Create new window with the title "Application".
         m_window = std::make_unique<Window>(
             Window::Settings{"Application"}
@@ -37,6 +45,7 @@ namespace FoxSort {
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
         SDL_Quit();
+        IMG_Quit(); 
     }
 
     int Application::Run() {
@@ -67,6 +76,29 @@ namespace FoxSort {
  
         m_running = true;
  
+        left_image = LoadTexture("Assets/left_image.png", m_window->get_native_renderer());
+
+       
+ 
+ 
+
+        // Initialize sorting algorithm
+        delay = 300;  // Set default delay to 100 ms
+        sorter = std::make_unique<BubbleSort>();
+        values.resize(100);
+        for (int i = 0; i < 100; ++i) {
+            values[i] = i + 1;  
+        }
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(values.begin(), values.end(), g);
+
+        sorter->Init(values);
+        is_sorting_paused = false;
+        plot_values = std::vector<float>(plot_buffer_size, 0.0f);
+        plot_values_offset = 0;
+
+
 
         while (m_running) {
             SDL_Event event{};
@@ -82,18 +114,13 @@ namespace FoxSort {
             ImGui_ImplSDL2_NewFrame();
 
             ImGui::NewFrame();
- 
-
-            UpdateGUI();
-
-            ImGui::Render();
-
-            SDL_SetRenderDrawColor(m_window->get_native_renderer(), 233, 100, 100, 255);
-            SDL_RenderClear(m_window->get_native_renderer());
-
 
             Update();
 
+            // Then, update the GUI
+            UpdateGUI();
+
+            ImGui::Render();
 
              ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_window->get_native_renderer());
             SDL_RenderPresent(
@@ -105,29 +132,46 @@ namespace FoxSort {
     }
 
     void Application::Update() {
-
         int window_width{ 0 };
         int window_height{ 0 };
-        SDL_GetWindowSize(
-            m_window->get_native_window(),
-            &window_width, &window_height
-        );
+        SDL_GetWindowSize(m_window->get_native_window(), &window_width, &window_height);
 
+        int margin = 10;
         int square1_width = window_width * 0.3;
         int square2_width = window_width * 0.7;
         int square_height = window_height;
 
- 
-
-        // Малювання першого квадрату (червоний)
+        // Draw the first rectangle (red)
         SDL_Rect square1 = { 0, 0, square1_width, square_height };
         SDL_SetRenderDrawColor(m_window->get_native_renderer(), 255, 0, 0, 255);
         SDL_RenderFillRect(m_window->get_native_renderer(), &square1);
 
-        //// Малювання другого квадрату (синій)
-        //SDL_Rect square2 = { square1_width, 0, square2_width, square_height };
-        //SDL_SetRenderDrawColor(m_window->get_native_renderer(), 0, 0, 255, 255);
-        //SDL_RenderFillRect(m_window->get_native_renderer(), &square2);
+        // Desired texture size
+        const int target_texture_width = 300;
+        const int target_texture_height = 300;
+
+        // Calculate the position to center the texture within the red rectangle
+        int x = (square1_width - target_texture_width) / 2;
+        int y = (square_height - target_texture_height) / 2;
+
+        SDL_Rect dstrect = { x, y, target_texture_width, target_texture_height };
+        SDL_RenderCopy(m_window->get_native_renderer(), left_image, nullptr, &dstrect);
+
+        // Draw the second rectangle (sort zone)
+        SDL_Rect square2 = { square1_width, 0, square2_width, square_height };
+        SDL_SetRenderDrawColor(m_window->get_native_renderer(), 233, 100, 100, 255);
+        SDL_RenderFillRect(m_window->get_native_renderer(), &square2);
+
+        // Update sorting and draw lines
+        if (!is_sorting_paused) {
+            Uint32 current_time = SDL_GetTicks();
+            if (current_time - sorter->GetLastStep() >= delay) {
+                sorter->Step();
+                plot_values[plot_values_offset] = sorter->GetComparisonState();
+                plot_values_offset = (plot_values_offset + 1) % plot_buffer_size;
+            }
+        }
+        sorter->Update(m_window->get_native_renderer(), square1_width + margin, margin, square2_width - 2 * margin, square_height - 2 * margin);
     }
 
     void Application::UpdateGUI() {
@@ -135,10 +179,7 @@ namespace FoxSort {
         if (m_show_some_panel) {
             int window_width{ 0 };
             int window_height{ 0 };
-            SDL_GetWindowSize(
-                m_window->get_native_window(),
-                &window_width, &window_height
-            );
+            SDL_GetWindowSize(m_window->get_native_window(), &window_width, &window_height);
 
             int panel_width = static_cast<int>(window_width * 0.3);
             int panel_height = window_height;
@@ -148,58 +189,56 @@ namespace FoxSort {
             ImGui::Begin("Some panel", &m_show_some_panel, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
             ImGui::Text("Hello World");
-            static float values[90] = {};
-            static int values_offset = 0;
-            static double refresh_time = 0.0;
-            if ( refresh_time == 0.0)
-                refresh_time = ImGui::GetTime();
-            while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
-            {
-                static float phase = 0.0f;
-                values[values_offset] = cosf(phase);
-                values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
-                phase += 0.10f * values_offset;
-                refresh_time += 1.0f / 60.0f;
-            }
-            {
-                float average = 0.0f;
-                for (int n = 0; n < IM_ARRAYSIZE(values); n++)
-                    average += values[n];
-                average /= (float)IM_ARRAYSIZE(values);
-                char overlay[32];
-                sprintf(overlay, "avg %f", average);
-                ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
-            }
 
+            // Plot the comparison state
+            ImGui::PlotLines("Sorting State", plot_values.data(), plot_buffer_size, plot_values_offset, nullptr, 0.0f, values.size(), ImVec2(300.0f, 80.0f));
+            static std::vector<float> big_o_plot;
+            if (big_o_plot.size() != values.size()) {
+                big_o_plot.resize(values.size());
+                for (int i = 0; i < values.size(); ++i) {
+                    big_o_plot[i] = static_cast<float>(i * i); // O(n^2) for Bubble Sort
+                }
+            }
+            ImGui::PlotLines("Big O Notation (O(n^2))", big_o_plot.data(), big_o_plot.size(), 0, nullptr, 0.0f, big_o_plot.back(), ImVec2(300.0f, 300.0f));
+
+            // Add a button to toggle sorting pause
+            if (ImGui::Button("Pause/Resume Sorting")) {
+                TogglePauseSorting();
+            }
 
             ImGui::End();
         }
     }
 
-    void Application::Draw(std::vector<int>& v, SDL_Renderer* renderer, unsigned int red, unsigned int blue)
-    {
-        int index = 0;
-        for (int i : v) {
-            if (index == red)
-            {
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-            }
-            else if (index == blue)
-            {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-            }
-            else
-            {
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-            }
+    void Application::TogglePauseSorting() {
+        if (sorter) {
+            sorter->Pause();
+        }
+        is_sorting_paused = !is_sorting_paused;
+    }
 
-            SDL_RenderDrawLine(renderer, index, 99, index, i);
-
-            index += 1;
+    void Application::SetSortingDelay(int new_delay) {
+        delay = new_delay;
+        if (sorter) {
+            sorter->SetDelay(delay);
         }
     }
 
     void Application::Shutdown() {
         m_running = false;
+    }
+
+        
+    SDL_Texture* Application::LoadTexture(const std::string& path, SDL_Renderer* renderer) {
+        SDL_Texture* newTexture = nullptr;
+        SDL_Surface* loadedSurface = IMG_Load(path.c_str());
+        if (loadedSurface == nullptr) {
+            return NULL;
+        }
+        else {
+            newTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+            SDL_FreeSurface(loadedSurface);
+        }
+        return newTexture;
     }
 }   

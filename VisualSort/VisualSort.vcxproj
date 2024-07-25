@@ -85,7 +85,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)VisualSort\Dependinces\GL\lib\x86;$(SolutionDir)VisualSort\Dependinces\SDL2\lib\x86;$(SolutionDir)VisualSort\Dependinces\ImGui;$(SolutionDir)VisualSort\Dependinces\ImGui\backends;$(SolutionDir)VisualSort\Dependinces\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -101,11 +101,11 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)VisualSort\Dependinces\GL\lib\x86;$(SolutionDir)VisualSort\Dependinces\SDL2\lib\x86;$(SolutionDir)VisualSort\;$(SolutionDir)VisualSort\Dependinces\ImGui;$(SolutionDir)VisualSort\Dependinces\ImGui\backends;$(SolutionDir)VisualSort\Dependinces\GLFW\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -122,7 +122,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)VisualSort\Dependinces\SDL2\lib\x64;$(SolutionDir)VisualSort\Dependinces\GL\lib\Release\Win32;$(SolutionDir)VisualSort\Dependinces\ImGui;$(SolutionDir)VisualSort\Dependinces\ImGui\backends;$(SolutionDir)VisualSort\Dependinces\GLFW\lib-vc2022;%(AdditionalLibraryDirectories);$(SolutionDir)VisualSort\Dependinces\GL\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,13 +142,14 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)VisualSort\Dependinces\GL\lib\Release\Win32;$(SolutionDir)VisualSort\Dependinces\SDL2\lib\x64;$(SolutionDir)VisualSort\;$(SolutionDir)VisualSort\Dependinces\ImGui;$(SolutionDir)VisualSort\Dependinces\ImGui\backends;$(SolutionDir)VisualSort\Dependinces\GLFW\lib-vc2022;%(AdditionalLibraryDirectories);$(SolutionDir)VisualSort\Dependinces\GL\lib\x64</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;glfw3.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)VisualSort\Dependinces\SDL2\include;$(SolutionDir)VisualSort\Dependinces\ImGui;$(SolutionDir)VisualSort\Dependinces\GLFW\include;$(SolutionDir)VisualSort\Dependinces\GL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="Core\Sort\BubbleSort.cpp" />
     <ClCompile Include="Dependinces\ImGui\imgui.cpp" />
     <ClCompile Include="Dependinces\ImGui\imgui_demo.cpp" />
     <ClCompile Include="Dependinces\ImGui\imgui_draw.cpp" />
@@ -159,11 +160,13 @@
     <ClCompile Include="Dependinces\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Dependinces\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Core\Style.cpp" />
+    <ClCompile Include="Core\Sort\SortBase.cpp" />
     <ClCompile Include="VisualSort.cpp" />
     <ClCompile Include="Core\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Core\Sort\BubbleSort.h" />
     <ClInclude Include="Dependinces\GLFW\include\GLFW\glfw3.h" />
     <ClInclude Include="Dependinces\GLFW\include\GLFW\glfw3native.h" />
     <ClInclude Include="Dependinces\GL\include\GL\eglew.h" />
@@ -261,6 +264,7 @@
     <ClInclude Include="Dependinces\SDL2\include\SDL2\SDL_vulkan.h" />
     <ClInclude Include="Core\Window.h" />
     <ClInclude Include="Core\Style.h" />
+    <ClInclude Include="Core\Sort\SortBase.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />
