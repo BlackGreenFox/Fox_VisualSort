@@ -1,10 +1,13 @@
 #pragma once
-
-#include <SDL.h>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <ranges>
 #include <algorithm>
+
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include "Core/Window.h"
 #include "Core/Style.h"
@@ -23,14 +26,14 @@ namespace FoxSort {
 		void Update();
 		void UpdateGUI();
 		void Shutdown();
-		void Draw(std::vector<int>& v, SDL_Renderer* renderer, unsigned int red, unsigned int blue);
 
 
-		void InitSort();
-		void DrawArray(const std::vector<int>& array, SDL_Renderer* renderer, int red_index, int blue_index);
+	 
+		 
 
  
 		SDL_Texture* LoadTexture(const std::string& path, SDL_Renderer* renderer);
+		void RenderText(SDL_Renderer* renderer, const std::string& text, int size, int x, int y, int max_width);
 		// Sorting related variables
  
 		int current_index = 1;
@@ -47,11 +50,11 @@ namespace FoxSort {
 
 		std::unique_ptr<Window> m_window{nullptr};
 
-		bool m_show_some_panel{ true };
+		bool m_show_some_panel{ NULL };
 
 
 		SDL_Texture* left_image = nullptr;
- 
+		TTF_Font* font = nullptr;
 
 		std::vector<int> values;
 		std::unique_ptr<SortBase> sorter;

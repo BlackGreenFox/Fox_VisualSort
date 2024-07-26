@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <SDL.h>
-
+#include <iostream>
 class SortBase {
 public:
     virtual ~SortBase() = default;
@@ -13,5 +13,24 @@ public:
     virtual void SetDelay(int delay) = 0;
     virtual float GetComparisonState() const = 0;  // Add this line
     virtual Uint32 GetLastStep() const = 0;
+
+   // std::string* name() const;
+ //   std::string* description() const;
+
+private:
+    std::string _name;
+    std::string _description;
+    std::vector<int>* _values;
+
+    int _delay;
+    int _i;
+    int _j;
+    float _comparison_state;
+
+    bool _paused;
+    bool _swapped;
+    bool _sorted;
+
+    Uint32 _last_step;
 };
 

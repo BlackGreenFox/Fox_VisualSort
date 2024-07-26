@@ -85,7 +85,7 @@ void BubbleSort::Update(SDL_Renderer* renderer, int offsetX, int offsetY, int wi
             SDL_SetRenderDrawColor(renderer, 144, 238, 144, 255);  // Light green when sorted
         }
         else if (i == j_ || i == j_ + 1) {
-            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);  // Highlight the current sorting elements
+            SDL_SetRenderDrawColor(renderer, 99, 220, 66, 255);  // Highlight the current sorting elements
         }
         else {
             SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);  // Default color
