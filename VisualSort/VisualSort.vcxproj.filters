@@ -368,6 +368,9 @@
     <ClInclude Include="Core\Sort\InsertionSort.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="SDL2.dll" />

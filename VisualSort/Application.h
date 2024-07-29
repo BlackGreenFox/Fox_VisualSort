@@ -52,7 +52,7 @@ namespace FoxSort {
 
 		bool m_show_some_panel{ NULL };
 
-
+		std::vector<std::string> asciiFrames;
 		SDL_Texture* left_image = nullptr;
 		TTF_Font* font = nullptr;
 

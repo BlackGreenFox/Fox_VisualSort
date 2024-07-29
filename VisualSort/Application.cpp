@@ -3,7 +3,9 @@
 #include <imgui_impl_sdlrenderer2.h>
 #include "imgui_impl_opengl3.h"
 #include <imgui.h>
+#define STB_IMAGE_IMPLEMENTATION
 
+#include "stb_image.h"
 
 #include "Application.h"
 #include <Core/Sort/InsertionSort.h>
@@ -51,6 +53,69 @@ namespace FoxSort {
         SDL_Quit();
         IMG_Quit(); 
         TTF_Quit();
+    }
+
+
+    std::string convertToASCII(const unsigned char* pixels, int width, int height) {
+        std::string asciiArt;
+        const char* asciiChars = " .:-=+*#%@";
+        for (int y = 0; y < height; y += 2) {
+            for (int x = 0; x < width; x++) {
+                int offset = (y * width + x) * 4;
+                int r = pixels[offset];
+                int g = pixels[offset + 1];
+                int b = pixels[offset + 2];
+                float brightness = 0.3f * r + 0.59f * g + 0.11f * b;
+                int index = static_cast<int>((brightness / 255.0f) * (strlen(asciiChars) - 1));
+                asciiArt += asciiChars[index];
+            }
+            asciiArt += '\n';
+        }
+        return asciiArt;
+    }
+
+    std::vector<std::string> loadGIFFrames(const char* filepath, int& frameWidth, int& frameHeight) {
+        // Load the GIF file into memory
+        FILE* file = fopen(filepath, "rb");
+        if (!file) {
+            std::cerr << "Failed to open GIF file" << std::endl;
+            return {};
+        }
+
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+
+        std::vector<unsigned char> file_data(file_size);
+        fread(file_data.data(), 1, file_size, file);
+        fclose(file);
+
+        // Decode the GIF
+        int width, height, frames;
+        unsigned char* data;
+        int* delays;
+
+        data = stbi_load_gif_from_memory(file_data.data(), file_size, &delays, &width, &height, &frames, 0, 0);
+
+        if (!data) {
+            std::cerr << "Failed to load GIF" << std::endl;
+            return {};
+        }
+
+        std::vector<std::string> asciiFrames;
+        frameWidth = width;
+        frameHeight = height;
+
+        // Convert each frame to ASCII
+        for (int i = 0; i < frames; ++i) {
+            int frame_offset = i * width * height * 4;
+            asciiFrames.push_back(convertToASCII(data + frame_offset, width, height));
+        }
+
+        // Free the image memory
+        stbi_image_free(data);
+
+        return asciiFrames;
     }
 
     int Application::Run() {
@@ -106,6 +171,10 @@ namespace FoxSort {
 
 
 
+        int frameWidth = 0;
+        int frameHeight = 0;
+        asciiFrames = loadGIFFrames("Assets/gifka.gif", frameWidth, frameHeight);
+
         while (m_running) {
             SDL_Event event{};
             while (SDL_PollEvent(&event) == 1) {
@@ -137,6 +206,8 @@ namespace FoxSort {
  
         return m_exit_status;
     }
+
+   
 
     void Application::Update() {
         SDL_RenderClear(m_window->get_native_renderer());
@@ -370,6 +441,28 @@ namespace FoxSort {
 
         ImGui::End();
         }
+
+        static int currentFrame = 0;
+        static int frameWidth = 1000;
+        static int frameHeight = 1000;
+        static float frameDuration = 0.1f;
+        static Uint32 lastFrameTime = 0;
+
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastFrameTime >= frameDuration * 1000) {
+            currentFrame = (currentFrame + 1) % asciiFrames.size();
+            lastFrameTime = currentTime;
+        }
+
+      
+
+        ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Always);
+        ImGui::Begin("ASCII Art", NULL, ImGuiWindowFlags_NoResize);
+        ImGui::SetWindowFontScale(std::min(static_cast<float>(600) / frameWidth, static_cast<float>(600) / frameHeight));
+        ImGui::TextUnformatted(asciiFrames[currentFrame].c_str());
+
+         
+        ImGui::End();
     }
 
 

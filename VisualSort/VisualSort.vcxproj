@@ -267,6 +267,7 @@
     <ClInclude Include="Core\Style.h" />
     <ClInclude Include="Core\Sort\SortBase.h" />
     <ClInclude Include="Core\Sort\InsertionSort.h" />
+    <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />
