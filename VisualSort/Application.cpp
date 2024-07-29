@@ -70,6 +70,7 @@ namespace FoxSort {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;                  // Enable docking
 
 
+
         ImGui_ImplSDL2_InitForSDLRenderer(
             m_window->get_native_window(),
             m_window->get_native_renderer()
@@ -211,7 +212,7 @@ namespace FoxSort {
         ImGui::SeparatorText("ABOUT THIS ALGORITHM:");
         ImGui::TextWrapped(sorter->GetDescription().c_str());
 
-        // Plot the comparison state
+       
         ImGui::SeparatorText("PLOT GRAPH:");
         ImGui::PlotLines("##SortingState", plot_values.data(), plot_buffer_size, plot_values_offset, nullptr, 0.0f, *std::max_element(plot_values.begin(), plot_values.end()), ImVec2(static_cast<float>(panel_width - 20), 80.0f));
 
@@ -220,7 +221,7 @@ namespace FoxSort {
         ImGui::PlotLines("##BigO", big_o_plot.data(), big_o_plot.size(), 0, nullptr, 0.0f, big_o_plot.back(), ImVec2(static_cast<float>(panel_width - 20), 300.0f));
 
 
-        // Add a button to toggle sorting pause
+ 
         ImGui::SeparatorText("CONTROL SECTION:");
         ImGui::BeginGroup();
 
@@ -276,6 +277,59 @@ namespace FoxSort {
 
         ImGui::EndGroup();
 
+        ImGui::End();
+
+
+        // Little Tip Overlay Panel
+        static int location = 0;
+        ImGuiIO& io = ImGui::GetIO();
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+        if(location >= 0)
+        {
+            const float PAD = 10.0f;
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+            ImVec2 work_size = viewport->WorkSize;
+            ImVec2 window_pos, window_pos_pivot;
+            window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + panel_width + PAD);
+            window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+            window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
+            window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
+            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            window_flags |= ImGuiWindowFlags_NoMove;
+        }
+        else if (location == -2)
+        {
+            // Center window
+            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+            window_flags |= ImGuiWindowFlags_NoMove;
+        }
+        ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+        ImGui::Begin("Example: Simple overlay", p_open, window_flags);
+        
+            
+            ImGui::Text("Little Tips");
+            ImGui::Text("(right-click to Close)\n" "F1 to open this panel\n" "SPACE - to pause/resume\n" "R - to reset");
+            ImGui::Separator();
+            if (ImGui::IsMousePosValid())
+                ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
+            else
+                ImGui::Text("Mouse Position: <invalid>");
+            if (ImGui::BeginPopupContextWindow())
+            {
+                if (ImGui::MenuItem("Custom", NULL, location == -1)) location = -1;
+                if (ImGui::MenuItem("Center", NULL, location == -2)) location = -2;
+                if (ImGui::MenuItem("Top-left", NULL, location == 0)) location = 0;
+                if (ImGui::MenuItem("Top-right", NULL, location == 1)) location = 1;
+                if (ImGui::MenuItem("Bottom-left", NULL, location == 2)) location = 2;
+                if (ImGui::MenuItem("Bottom-right", NULL, location == 3)) location = 3;
+                if (ImGui::MenuItem("Close", NULL, location == 3)) location = 3;
+                if (p_open && ImGui::MenuItem("Close")) *p_open = false;
+                ImGui::EndPopup();
+            }
+        
         ImGui::End();
     }
 
