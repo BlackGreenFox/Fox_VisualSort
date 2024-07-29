@@ -1,25 +1,27 @@
 #pragma once
 #include <vector>
-#include <SDL.h>
+#include <algorithm>
 #include <iostream>
+#include <SDL.h>
+
 class SortBase {
 public:
     virtual ~SortBase() = default;
 
-    virtual void Init(std::vector<int>& values) = 0;
+    virtual void Init(std::vector<int>& values, int delay) = 0;
     virtual void Step() = 0;
-    virtual void Pause() = 0;
     virtual void Update(SDL_Renderer* renderer, int offsetX, int offsetY, int width, int height) = 0;
-    virtual void SetDelay(int delay) = 0;
-    virtual float GetComparisonState() const = 0;  // Add this line
-    virtual Uint32 GetLastStep() const = 0;
+    
+    void Pause();
+    void SetDelay(int delay);
+    float GetComparisonState() const;
+    bool IsSorted() const;
+    Uint32 GetLastStep() const;
 
-   // std::string* name() const;
- //   std::string* description() const;
+    virtual std::string GetDescription() const = 0;
+    virtual std::vector<float> GetBigOPlotData() const = 0;
 
-private:
-    std::string _name;
-    std::string _description;
+protected:
     std::vector<int>* _values;
 
     int _delay;

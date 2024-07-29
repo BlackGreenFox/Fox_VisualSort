@@ -6,6 +6,7 @@
 
 
 #include "Application.h"
+#include <Core/Sort/InsertionSort.h>
  
 #define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR)))) 
  
@@ -97,7 +98,7 @@ namespace FoxSort {
         std::mt19937 g(rd());
         std::shuffle(values.begin(), values.end(), g);
 
-        sorter->Init(values);
+        sorter->Init(values, delay);
         is_sorting_paused = false;
         plot_values = std::vector<float>(plot_buffer_size, 0.0f);
         plot_values_offset = 0;
@@ -113,7 +114,7 @@ namespace FoxSort {
                     Shutdown();
                 }
             }
-
+    
             ImGui_ImplSDLRenderer2_NewFrame();
             ImGui_ImplSDL2_NewFrame();
 
@@ -125,9 +126,10 @@ namespace FoxSort {
             UpdateGUI();
 
             ImGui::Render();
-
+            
              ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), m_window->get_native_renderer());
-            SDL_RenderPresent(
+          
+             SDL_RenderPresent(
                 m_window->get_native_renderer()
             );
         }
@@ -136,6 +138,8 @@ namespace FoxSort {
     }
 
     void Application::Update() {
+        SDL_RenderClear(m_window->get_native_renderer());
+
         int window_width{ 0 };
         int window_height{ 0 };
         SDL_GetWindowSize(m_window->get_native_window(), &window_width, &window_height);
@@ -157,7 +161,7 @@ namespace FoxSort {
         // Calculate the position to center the texture within the red rectangle
         int x = (square1_width - target_texture_width) / 2;
         int y = (square_height - target_texture_height) / 2 - 100;
-        
+
         std::string text = "> Oh, you find me.";
         int text_width = target_texture_width; // Stretch to the same width as the image
         int text_height = 128; // Example height, adjust as necessary
@@ -205,22 +209,16 @@ namespace FoxSort {
         ImGui::Begin(buf, p_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
         ImGui::SeparatorText("ABOUT THIS ALGORITHM:");
-        ImGui::TextWrapped("Bubble sort, sometimes referred to as sinking sort, is a simple sorting algorithm that repeatedly steps through the input list element by element, comparing the current element with the one after it, swapping their values if needed. These passes through the list are repeated until no swaps have to be performed during a pass, meaning that the list has become fully sorted. The algorithm, which is a comparison sort, is named for the way the larger elements 'bubble' up to the top of the list.");
- 
+        ImGui::TextWrapped(sorter->GetDescription().c_str());
+
         // Plot the comparison state
         ImGui::SeparatorText("PLOT GRAPH:");
         ImGui::PlotLines("##SortingState", plot_values.data(), plot_buffer_size, plot_values_offset, nullptr, 0.0f, *std::max_element(plot_values.begin(), plot_values.end()), ImVec2(static_cast<float>(panel_width - 20), 80.0f));
-  
+
         ImGui::SeparatorText("BIG 'O':");
-        static std::vector<float> big_o_plot;
-        if (big_o_plot.size() != values.size()) {
-            big_o_plot.resize(values.size());
-            for (int i = 0; i < values.size(); ++i) {
-                big_o_plot[i] = static_cast<float>(i * i); // O(n^2) for Bubble Sort
-            }
-        }
+        std::vector<float> big_o_plot = sorter->GetBigOPlotData();
         ImGui::PlotLines("##BigO", big_o_plot.data(), big_o_plot.size(), 0, nullptr, 0.0f, big_o_plot.back(), ImVec2(static_cast<float>(panel_width - 20), 300.0f));
- 
+
 
         // Add a button to toggle sorting pause
         ImGui::SeparatorText("CONTROL SECTION:");
@@ -230,14 +228,48 @@ namespace FoxSort {
         static int item_current = 0;
 
         ImGui::SetNextItemWidth(static_cast<float>(panel_width * 0.65f));
-        ImGui::Combo("Algoritme", &item_current, items, IM_ARRAYSIZE(items));
+        if (ImGui::Combo("Algoritme", &item_current, items, IM_ARRAYSIZE(items)))
+        {
+            switch (item_current) {
+            case 0:
+                sorter = std::make_unique<BubbleSort>();
+                break;
+            case 1:
+                sorter = std::make_unique<InsertionSort>();
+                break;
+            case 2:
+                
+                break;
+            default:
+                break;
+            }
+            std::random_device rd;
+            std::mt19937 g(rd());
+            std::shuffle(values.begin(), values.end(), g);
+            sorter->Init(values, delay);
+        }
 
-        static int i1 = 100;
-  
+        static int new_sort_size = 100;
+
         ImGui::SetNextItemWidth(static_cast<float>(panel_width * 0.65f));
-        ImGui::SliderInt("Size Sorting", &i1, 10, 200, "%d", ImGuiSliderFlags_AlwaysClamp);
+        if (ImGui::SliderInt("Size Sorting", &new_sort_size, 10, 200, "%d", ImGuiSliderFlags_AlwaysClamp))
+        {
+            values.resize(new_sort_size);
+            for (int i = 0; i < new_sort_size; ++i) {
+                values[i] = i + 1;
+            }
+            std::random_device rd;
+            std::mt19937 g(rd());
+            std::shuffle(values.begin(), values.end(), g);
+            sorter->Init(values, delay);
+        }
+
         ImGui::SetNextItemWidth(static_cast<float>(panel_width * 0.65f));
-        ImGui::SliderInt("Delay Sorting", &delay, 0, 500, "%d", ImGuiSliderFlags_AlwaysClamp);
+        if (ImGui::SliderInt("Delay Sorting", &delay, 0, 500, "%d", ImGuiSliderFlags_AlwaysClamp))
+        {
+           sorter->SetDelay(delay);
+        }
+
         if (ImGui::Button("Pause/Resume Sorting", ImVec2(static_cast<float>(panel_width - 20), 0))) {
             TogglePauseSorting();
         }
@@ -259,6 +291,13 @@ namespace FoxSort {
         delay = new_delay;
         if (sorter) {
             sorter->SetDelay(delay);
+        }
+    }
+
+    void Application::OnEvent(const SDL_WindowEvent& event)
+    {
+        switch (event.event) {
+   
         }
     }
 

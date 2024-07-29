@@ -161,6 +161,7 @@
     <ClCompile Include="Dependinces\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Core\Style.cpp" />
     <ClCompile Include="Core\Sort\SortBase.cpp" />
+    <ClCompile Include="Core\Sort\InsertionSort.cpp" />
     <ClCompile Include="VisualSort.cpp" />
     <ClCompile Include="Core\Window.cpp" />
   </ItemGroup>
@@ -265,6 +266,7 @@
     <ClInclude Include="Core\Window.h" />
     <ClInclude Include="Core\Style.h" />
     <ClInclude Include="Core\Sort\SortBase.h" />
+    <ClInclude Include="Core\Sort\InsertionSort.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />

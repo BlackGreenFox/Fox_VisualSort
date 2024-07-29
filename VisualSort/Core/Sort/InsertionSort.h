@@ -2,13 +2,15 @@
 #include "SortBase.h"
 
 
-class BubbleSort : public SortBase {
+class InsertionSort : public SortBase 
+{
 public:
-    BubbleSort();
+    InsertionSort();
     void Init(std::vector<int>& values, int delay) override;
     void Step() override;
     void Update(SDL_Renderer* renderer, int offsetX, int offsetY, int width, int height) override;
-   
+
     std::string GetDescription() const override;
     std::vector<float> GetBigOPlotData() const override;
 };
+

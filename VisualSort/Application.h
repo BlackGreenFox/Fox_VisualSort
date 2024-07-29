@@ -20,20 +20,20 @@ namespace FoxSort {
 	public:
 		Application();
 		~Application();
+
 		static Application* GetInstance();
 
 		int Run();
 		void Update();
 		void UpdateGUI();
 		void Shutdown();
+		void OnEvent(const SDL_WindowEvent& event);
 
-
-	 
-		 
-
- 
+		// Render Functions
 		SDL_Texture* LoadTexture(const std::string& path, SDL_Renderer* renderer);
 		void RenderText(SDL_Renderer* renderer, const std::string& text, int size, int x, int y, int max_width);
+		
+		
 		// Sorting related variables
  
 		int current_index = 1;
