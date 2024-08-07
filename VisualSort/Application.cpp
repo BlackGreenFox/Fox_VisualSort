@@ -456,7 +456,7 @@ namespace FoxSort {
 
       
 
-        ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(900, 900), ImGuiCond_Always);
         ImGui::Begin("ASCII Art", NULL, ImGuiWindowFlags_NoResize);
         ImGui::SetWindowFontScale(std::min(static_cast<float>(600) / frameWidth, static_cast<float>(600) / frameHeight));
         ImGui::TextUnformatted(asciiFrames[currentFrame].c_str());
