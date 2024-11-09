@@ -144,6 +144,7 @@ namespace FoxSort {
             m_window->get_native_renderer()
         );
 
+        Style::Initialize();
         Style::SetImGuiStyle();
  
         m_running = true;
@@ -178,13 +179,11 @@ namespace FoxSort {
         while (m_running) {
             SDL_Event event{};
             while (SDL_PollEvent(&event) == 1) {
-                ImGui_ImplSDL2_ProcessEvent(&event);
-
-                if (event.type == SDL_QUIT) {
-                    Shutdown();
-                }
+                OnEvent(event);
             }
-    
+        
+
+
             ImGui_ImplSDLRenderer2_NewFrame();
             ImGui_ImplSDL2_NewFrame();
 
@@ -211,11 +210,11 @@ namespace FoxSort {
 
     void Application::Update() {
         SDL_RenderClear(m_window->get_native_renderer());
-
+       
         int window_width{ 0 };
         int window_height{ 0 };
         SDL_GetWindowSize(m_window->get_native_window(), &window_width, &window_height);
-
+    
         int margin = 10;
         int square1_width = window_width * 0.3;
         int square2_width = window_width * 0.7;
@@ -279,7 +278,7 @@ namespace FoxSort {
         char buf[128];
         sprintf(buf, "Sorter Control Panel | %cw%c###MainPanel", "O-TO"[(int)(ImGui::GetTime() / 5.75f) & 3], "O-TO"[(int)(ImGui::GetTime() / 5.75f) & 3]);
         ImGui::Begin(buf, p_open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-
+ 
         ImGui::SeparatorText("ABOUT THIS ALGORITHM:");
         ImGui::TextWrapped(sorter->GetDescription().c_str());
 
@@ -333,6 +332,7 @@ namespace FoxSort {
             }
             std::random_device rd;
             std::mt19937 g(rd());
+            is_sorting_paused = true;
             std::shuffle(values.begin(), values.end(), g);
             sorter->Init(values, delay);
         }
@@ -352,36 +352,46 @@ namespace FoxSort {
         ImGui::End();
 
 
+
+
+
+
+        // ---------------------------------------------------------------------------
         // Little Tip Overlay Panel
         static int location = 0;
+        
         ImGuiIO& io = ImGui::GetIO();
         ImGuiWindowFlags ovelay_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
-        if(location >= 0)
-        {
-            const float PAD = 10.0f;
-            const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-            ImVec2 work_size = viewport->WorkSize;
-            ImVec2 window_pos, window_pos_pivot;
-            window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + panel_width + PAD);
-            window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-            window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
-            window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
-            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-            ImGui::SetNextWindowViewport(viewport->ID);
-            ovelay_flags |= ImGuiWindowFlags_NoMove;
-        }
-        else if (location == -2)
-        {
-            // Center window
-            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-            ovelay_flags |= ImGuiWindowFlags_NoMove;
-        }
-        ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-        ImGui::Begin("Example: Simple overlay", p_open, ovelay_flags);
-        
-            
+        if (m_show_tip_panel) {
+            if (location >= 0)
+            {
+                const float PAD = 10.0f;
+                const ImGuiViewport* viewport = ImGui::GetMainViewport();
+                ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+                ImVec2 work_size = viewport->WorkSize;
+                ImVec2 window_pos, window_pos_pivot;
+                window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + panel_width + PAD);
+                window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+                window_pos_pivot.x = (location & 1) ? 1.0f : 0.0f;
+                window_pos_pivot.y = (location & 2) ? 1.0f : 0.0f;
+                ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+                ImGui::SetNextWindowViewport(viewport->ID);
+                ovelay_flags |= ImGuiWindowFlags_NoMove;
+            }
+            else if (location == -2)
+            {
+                // Center window
+                ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+                ovelay_flags |= ImGuiWindowFlags_NoMove;
+            }
+            ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+
+
+
+            // Overlay Tips Panel
+ 
+            ImGui::Begin("Tips Overlay", &m_show_tip_panel, ovelay_flags);
             ImGui::Text("Little Tips");
             ImGui::Text("(right-click to Close)\n" "F1 to open this panel\n" "SPACE - to pause/resume\n" "R - to reset");
             ImGui::Separator();
@@ -392,17 +402,19 @@ namespace FoxSort {
             if (ImGui::BeginPopupContextWindow())
             {
                 if (ImGui::MenuItem("Custom", NULL, location == -1)) location = -1;
-                if (ImGui::MenuItem("Center", NULL, location == -2)) location = -2;
                 if (ImGui::MenuItem("Top-left", NULL, location == 0)) location = 0;
                 if (ImGui::MenuItem("Top-right", NULL, location == 1)) location = 1;
                 if (ImGui::MenuItem("Bottom-left", NULL, location == 2)) location = 2;
                 if (ImGui::MenuItem("Bottom-right", NULL, location == 3)) location = 3;
-                if (ImGui::MenuItem("Close", NULL, location == 3)) location = 3;
-                if (p_open && ImGui::MenuItem("Close")) *p_open = false;
+                if (ImGui::MenuItem("Close", NULL)) m_show_tip_panel = false;
                 ImGui::EndPopup();
             }
-        float first_panel_height = ImGui::GetWindowHeight();
-        ImGui::End();
+            float first_panel_height = ImGui::GetWindowHeight();
+            ImGui::End();
+            
+        }
+        // ---------------------------------------------------------------------------
+        
 
 
         // Little Fun Panel
@@ -413,21 +425,22 @@ namespace FoxSort {
         ImVec2 work_size = viewport->WorkSize;
         ImVec2 window_pos, window_pos_pivot;
 
-        if (location >= 0) {
-            const float PAD = 10.0f;
-            window_pos.x = (work_pos.x + panel_width + PAD);
-            if ((location & 1) == 0) {
-                // If the first panel is on the left side, place the second panel below it
-                window_pos.y = first_panel_height + PAD + 10;
-            }
-            else {
-                window_pos.y = PAD;
-            }
-            window_pos_pivot.x = 0.0f;
-            window_pos_pivot.y = 0.0f;
-            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-            ImGui::SetNextWindowViewport(viewport->ID);
+       
+        const float PAD = 10.0f;
+        window_pos.x = (work_pos.x + panel_width + PAD);
+        if (location == 0) {
+            float first_panel_height = ImGui::GetWindowHeight();
+            // If the first panel is on the left side, place the second panel below it
+            window_pos.y = first_panel_height + PAD + 10;
         }
+        else {
+            window_pos.y = PAD;
+        }
+        window_pos_pivot.x = 0.0f;
+        window_pos_pivot.y = 0.0f;
+        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        
  
         ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
         ImGui::Begin("Meme Window", p_open, ovelay_flags_fun);
@@ -463,8 +476,13 @@ namespace FoxSort {
 
          
         ImGui::End();
+
+
+        Style::ShowStylePanel();
+        
     }
 
+ 
 
     void Application::TogglePauseSorting() {
         if (sorter) {
@@ -480,11 +498,23 @@ namespace FoxSort {
         }
     }
 
-    void Application::OnEvent(const SDL_WindowEvent& event)
+    void Application::OnEvent(const SDL_Event& event)
     {
-        switch (event.event) {
-   
+        if (event.type == SDL_QUIT) {
+            Shutdown();
         }
+        else if (event.type == SDL_KEYDOWN) {
+            switch (event.key.keysym.sym) {
+            case SDLK_F1:
+                m_show_tip_panel = !m_show_tip_panel;
+                break;
+            case SDLK_F2:
+                Style::open_panel = !Style::open_panel;
+            default:
+                break;
+            }
+        }
+        ImGui_ImplSDL2_ProcessEvent(&event);
     }
 
     void Application::Shutdown() {

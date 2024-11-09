@@ -13,6 +13,7 @@
 #include "Core/Style.h"
  
 #include "Core/Sort/BubbleSort.h"
+#include "Core/Sort/InsertionSort.h"
 
 namespace FoxSort {
 
@@ -27,7 +28,16 @@ namespace FoxSort {
 		void Update();
 		void UpdateGUI();
 		void Shutdown();
-		void OnEvent(const SDL_WindowEvent& event);
+		void OnEvent(const SDL_Event& event);
+
+		// Panels ImGUI
+ 
+
+
+
+
+
+
 
 		// Render Functions
 		SDL_Texture* LoadTexture(const std::string& path, SDL_Renderer* renderer);
@@ -42,23 +52,37 @@ namespace FoxSort {
 		void TogglePauseSorting();
 		void SetSortingDelay(int delay);  
 
+
+		void ShowStylePanel(ImGuiStyle* ref);
+
 	private:
 		static Application* instance;
-		
+		bool m_show_tip_panel{ true };
+
+
+
+		bool m_show_some_panel{ NULL };
 		int m_exit_status{0};
 		bool m_running{ true };
 
+
+
 		std::unique_ptr<Window> m_window{nullptr};
 
-		bool m_show_some_panel{ NULL };
+		
 
 		std::vector<std::string> asciiFrames;
 		SDL_Texture* left_image = nullptr;
 		TTF_Font* font = nullptr;
 
 		std::vector<int> values;
+		std::vector<int> values2;
+
 		std::unique_ptr<SortBase> sorter;
+		std::unique_ptr<SortBase> sorter2;
+
 		bool is_sorting_paused;
+	    bool compare_sorting{ false };
 		int delay;  // Add this line
 
 		// Add buffer for plotting

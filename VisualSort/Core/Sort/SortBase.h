@@ -4,13 +4,16 @@
 #include <iostream>
 #include <SDL.h>
 
+#include "../Style.h"
+
+namespace FoxSort {
 class SortBase {
 public:
     virtual ~SortBase() = default;
 
     virtual void Init(std::vector<int>& values, int delay) = 0;
     virtual void Step() = 0;
-    virtual void Update(SDL_Renderer* renderer, int offsetX, int offsetY, int width, int height) = 0;
+    virtual void Update(SDL_Renderer* renderer, int offsetX, int offsetY, int width, int height);
     
     void Pause();
     void SetDelay(int delay);
@@ -36,3 +39,4 @@ protected:
     Uint32 _last_step;
 };
 
+}
