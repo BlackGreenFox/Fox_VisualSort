@@ -8,7 +8,7 @@
 #include "stb_image.h"
 
 #include "Application.h"
-#include <Core/Sort/InsertionSort.h>
+
  
 #define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR)))) 
  
@@ -467,19 +467,43 @@ namespace FoxSort {
             lastFrameTime = currentTime;
         }
 
-      
+        static float opacity = 1.5f;
+        static float anim_t = 1.5f;
 
-        ImGui::SetNextWindowSize(ImVec2(900, 900), ImGuiCond_Always);
-        ImGui::Begin("ASCII Art", NULL, ImGuiWindowFlags_NoResize);
+        if (opacity != 0){
+       
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(window_width), static_cast<float>(window_height)));
+        ImGui::SetNextWindowBgAlpha(opacity); // Set initial opacity for the window
+
+        // Add window flags to disable resizing and moving
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar;
+
+        // Create the window with the specified flags
+        ImGui::Begin("ASCII Art", nullptr, window_flags);
+
+        // Gradually decrease opacity each frame
+        anim_t -= 0.002f;
+        if (opacity > 0.0f) {
+            opacity -= 0.002f; // Adjust the decrement value to control fade-out speed
+            ImGui::SetNextWindowBgAlpha(opacity);
+        }
+        else {
+            opacity = 0.0f; // Make sure opacity doesn't go below zero
+        }
+
+
+
         ImGui::SetWindowFontScale(std::min(static_cast<float>(600) / frameWidth, static_cast<float>(600) / frameHeight));
-        ImGui::TextUnformatted(asciiFrames[currentFrame].c_str());
+        //ImGui::TextUnformatted(asciiFrames[currentFrame].c_str());
+        ImVec4 textColor = ImVec4(1.0f, 1.0f, 1.0f, opacity); // White color with alpha based on text_opacity
+        ImGui::TextColored(textColor, "%s", asciiFrames[currentFrame].c_str());
 
-         
         ImGui::End();
+        }
 
 
         Style::ShowStylePanel();
-        
     }
 
  
