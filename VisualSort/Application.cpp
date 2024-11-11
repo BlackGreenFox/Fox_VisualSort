@@ -1,17 +1,11 @@
-﻿#pragma once
-#include <imgui_impl_sdl2.h>
-#include <imgui_impl_sdlrenderer2.h>
-#include "imgui_impl_opengl3.h"
-#include <imgui.h>
-#define STB_IMAGE_IMPLEMENTATION
-
+﻿#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
 #include "Application.h"
 
  
 #define IM_ARRAYSIZE(_ARR)          ((int)(sizeof(_ARR) / sizeof(*(_ARR)))) 
  
+
 
 namespace FoxSort {
     Application* Application::instance = nullptr;
@@ -39,10 +33,9 @@ namespace FoxSort {
         if (TTF_Init() == -1) {
             m_exit_status = 1;
         }
-
-        // Create new window with the title "Application".
+ 
         m_window = std::make_unique<Window>(
-            Window::Settings{"Application"}
+            Window::Settings{"Sort Application"}
         );
     }
 
@@ -50,6 +43,7 @@ namespace FoxSort {
         ImGui_ImplSDLRenderer2_Shutdown();
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
+
         SDL_Quit();
         IMG_Quit(); 
         TTF_Quit();
@@ -73,7 +67,6 @@ namespace FoxSort {
         }
         return asciiArt;
     }
-
     std::vector<std::string> loadGIFFrames(const char* filepath, int& frameWidth, int& frameHeight) {
         // Load the GIF file into memory
         FILE* file = fopen(filepath, "rb");
@@ -118,6 +111,8 @@ namespace FoxSort {
         return asciiFrames;
     }
 
+
+
     int Application::Run() {
         if (m_exit_status == 1) {
             return m_exit_status;
@@ -132,7 +127,7 @@ namespace FoxSort {
 
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;                  // Enable docking
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;                
 
 
 
@@ -359,7 +354,8 @@ namespace FoxSort {
         // ---------------------------------------------------------------------------
         // Little Tip Overlay Panel
         static int location = 0;
-        
+        float tip_panel_height = 0;
+
         ImGuiIO& io = ImGui::GetIO();
         ImGuiWindowFlags ovelay_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 
@@ -368,7 +364,7 @@ namespace FoxSort {
             {
                 const float PAD = 10.0f;
                 const ImGuiViewport* viewport = ImGui::GetMainViewport();
-                ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+                ImVec2 work_pos = viewport->WorkPos;  
                 ImVec2 work_size = viewport->WorkSize;
                 ImVec2 window_pos, window_pos_pivot;
                 window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + panel_width + PAD);
@@ -385,11 +381,8 @@ namespace FoxSort {
                 ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
                 ovelay_flags |= ImGuiWindowFlags_NoMove;
             }
-            ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+            ImGui::SetNextWindowBgAlpha(0.35f);  
 
-
-
-            // Overlay Tips Panel
  
             ImGui::Begin("Tips Overlay", &m_show_tip_panel, ovelay_flags);
             ImGui::Text("Little Tips");
@@ -409,52 +402,51 @@ namespace FoxSort {
                 if (ImGui::MenuItem("Close", NULL)) m_show_tip_panel = false;
                 ImGui::EndPopup();
             }
-            float first_panel_height = ImGui::GetWindowHeight();
+            tip_panel_height = ImGui::GetWindowHeight();
             ImGui::End();
             
         }
         // ---------------------------------------------------------------------------
         
 
-
-        // Little Fun Panel
+        // ---------------------------------------------------------------------------
+        // Little Fun Sort Indicator Panel
         if (!is_sorting_paused){
-        ImGuiWindowFlags ovelay_flags_fun = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size = viewport->WorkSize;
-        ImVec2 window_pos, window_pos_pivot;
+            ImGuiWindowFlags ovelay_flags_fun = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImVec2 work_pos = viewport->WorkPos;
+            ImVec2 work_size = viewport->WorkSize;
+            ImVec2 window_pos, window_pos_pivot;
+            char animated_text[128];
+            const float PAD = 10.0f;
 
-       
-        const float PAD = 10.0f;
-        window_pos.x = (work_pos.x + panel_width + PAD);
-        if (location == 0) {
-            float first_panel_height = ImGui::GetWindowHeight();
-            // If the first panel is on the left side, place the second panel below it
-            window_pos.y = first_panel_height + PAD + 10;
-        }
-        else {
-            window_pos.y = PAD;
-        }
-        window_pos_pivot.x = 0.0f;
-        window_pos_pivot.y = 0.0f;
-        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        ImGui::SetNextWindowViewport(viewport->ID);
-        
+
+            window_pos.x = (work_pos.x + panel_width + PAD);
+
+            if (location == 0) {
+                window_pos.y = tip_panel_height + PAD + 10;
+            }
+            else {
+                window_pos.y = PAD;
+            }
+            window_pos_pivot.x = 0.0f;
+            window_pos_pivot.y = 0.0f;
+            ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+            ImGui::SetNextWindowViewport(viewport->ID);
+            ImGui::SetNextWindowBgAlpha(0.35f); 
+            ImGui::Begin("Meme Window", p_open, ovelay_flags_fun);
+
+            sprintf(animated_text, "Sorting... %c", "|/-\\"[(int)(ImGui::GetTime() / 0.25f) & 3]);
+            ImGui::Text(animated_text);
  
-        ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-        ImGui::Begin("Meme Window", p_open, ovelay_flags_fun);
-
-
-        char animated_text[128];
-        sprintf(animated_text, "Sorting... %c", "|/-\\"[(int)(ImGui::GetTime() / 0.25f) & 3]);
-        ImGui::Text(animated_text);
- 
-       
-
-        ImGui::End();
+            ImGui::End();
         }
+        // ---------------------------------------------------------------------------
 
+
+        // ---------------------------------------------------------------------------
+        // Gif Load Screen Panel
+        static float opacity = 1.5f;
         static int currentFrame = 0;
         static int frameWidth = 1000;
         static int frameHeight = 1000;
@@ -466,42 +458,29 @@ namespace FoxSort {
             currentFrame = (currentFrame + 1) % asciiFrames.size();
             lastFrameTime = currentTime;
         }
-
-        static float opacity = 1.5f;
-        static float anim_t = 1.5f;
-
+ 
         if (opacity != 0){
        
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(static_cast<float>(window_width), static_cast<float>(window_height)));
-        ImGui::SetNextWindowBgAlpha(opacity); // Set initial opacity for the window
-
-        // Add window flags to disable resizing and moving
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar;
-
-        // Create the window with the specified flags
-        ImGui::Begin("ASCII Art", nullptr, window_flags);
-
-        // Gradually decrease opacity each frame
-        anim_t -= 0.002f;
-        if (opacity > 0.0f) {
-            opacity -= 0.002f; // Adjust the decrement value to control fade-out speed
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            ImGui::SetNextWindowSize(ImVec2(static_cast<float>(window_width), static_cast<float>(window_height)));
             ImGui::SetNextWindowBgAlpha(opacity);
+
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar;
+            ImGui::Begin("ASCII Art", nullptr, window_flags);
+
+            if (opacity > 0.0f) 
+                opacity -= 0.002f;
+            else
+                opacity = 0.0f;
+
+            ImGui::SetNextWindowBgAlpha(opacity);
+            ImGui::SetWindowFontScale(std::min(static_cast<float>(600) / frameWidth, static_cast<float>(600) / frameHeight));
+            ImVec4 textColor = ImVec4(1.0f, 1.0f, 1.0f, opacity);  
+            ImGui::TextColored(textColor, "%s", asciiFrames[currentFrame].c_str());
+
+            ImGui::End();
         }
-        else {
-            opacity = 0.0f; // Make sure opacity doesn't go below zero
-        }
-
-
-
-        ImGui::SetWindowFontScale(std::min(static_cast<float>(600) / frameWidth, static_cast<float>(600) / frameHeight));
-        //ImGui::TextUnformatted(asciiFrames[currentFrame].c_str());
-        ImVec4 textColor = ImVec4(1.0f, 1.0f, 1.0f, opacity); // White color with alpha based on text_opacity
-        ImGui::TextColored(textColor, "%s", asciiFrames[currentFrame].c_str());
-
-        ImGui::End();
-        }
-
+        // ---------------------------------------------------------------------------
 
         Style::ShowStylePanel();
     }
@@ -544,7 +523,6 @@ namespace FoxSort {
     void Application::Shutdown() {
         m_running = false;
     }
-
         
     SDL_Texture* Application::LoadTexture(const std::string& path, SDL_Renderer* renderer) {
         SDL_Texture* newTexture = nullptr;

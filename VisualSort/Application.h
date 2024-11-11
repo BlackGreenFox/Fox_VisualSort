@@ -5,6 +5,12 @@
 #include <ranges>
 #include <algorithm>
 
+#include <imgui.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_impl_sdlrenderer2.h>
+#include "imgui_impl_opengl3.h"
+#include <imgui.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -14,6 +20,7 @@
  
 #include "Core/Sort/BubbleSort.h"
 #include "Core/Sort/InsertionSort.h"
+
 
 namespace FoxSort {
 
@@ -31,7 +38,10 @@ namespace FoxSort {
 		void OnEvent(const SDL_Event& event);
 
 		// Panels ImGUI
- 
+		void ShowSorterControlPanel();
+		void ShowTipsOverlayPanel();
+		void ShowSorterIndicatorPanel();
+		void ShowLoaderScreenPanel();
 
 
 
