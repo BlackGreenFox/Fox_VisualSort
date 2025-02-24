@@ -290,6 +290,30 @@ namespace FoxSort {
         ImGui::SeparatorText("CONTROL SECTION:");
         ImGui::BeginGroup();
 
+
+
+
+
+        if (ImGui::Button("Pause/Resume Sorting", ImVec2(static_cast<float>(panel_width - 20), 0))) {
+            TogglePauseSorting();
+        }
+
+        if (ImGui::Button("< Step", ImVec2(static_cast<float>(panel_width / 2 - 10), 0))) {
+            TogglePauseSorting();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Step >", ImVec2(static_cast<float>(panel_width / 2 - 10), 0))) {
+            TogglePauseSorting();
+        }
+
+        ImGui::EndGroup();
+
+
+        ImGui::SeparatorText("SETTINGS:");
+        ImGui::BeginGroup();
+
         const char* items[] = { "Bubble Sort", "Insertion Sort", "Selection Sort", "Quick Sort", "Heap Sort", "Merge Sort" };
         static int item_current = 0;
 
@@ -338,14 +362,9 @@ namespace FoxSort {
            sorter->SetDelay(delay);
         }
 
-        if (ImGui::Button("Pause/Resume Sorting", ImVec2(static_cast<float>(panel_width - 20), 0))) {
-            TogglePauseSorting();
-        }
-
         ImGui::EndGroup();
 
         ImGui::End();
-
 
 
 
